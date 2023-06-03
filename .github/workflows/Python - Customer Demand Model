@@ -1,0 +1,128 @@
+#################################
+# List all non-standard packages to be imported by your 
+# script here (only missing packages will be installed)
+from ayx import Alteryx
+from ayx import Package
+#Package.installPackages(package='pip',install_type='install --upgrade')
+import matplotlib.pyplot as plt
+Package.installPackages(['patsy'])
+#import seaborn as sns
+from scipy.stats import boxcox
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import recall_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import f1_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+import random
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score as acc
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn import linear_model
+import statsmodels.api as sm
+from sklearn.metrics import r2_score
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import MinMaxScaler
+
+
+#################################
+df=Alteryx.read("#1")
+df2=df['row_date']
+df=df.drop(['row_date'],axis=1 )
+df=df.drop(['callsoffered'],axis=1 )
+#df = df.drop(['Yesterdays Calls'],axis=1 )
+
+dfmonth= pd.get_dummies(df['Month']).add_prefix('Month_')
+dfmonth = dfmonth.apply(pd.to_numeric) 
+df=pd.concat([df, dfmonth], axis=1)
+df = df.drop(['Month'],axis=1 )
+df = df.drop(['Month_October'],axis=1 )
+
+dfday= pd.get_dummies(df['Day']).add_prefix('Day_')
+dfday = dfday.apply(pd.to_numeric) 
+df=pd.concat([df, dfday], axis=1)
+df = df.drop(['Day'],axis=1 )
+df = df.drop(['Day_1'],axis=1 )
+
+dfdow= pd.get_dummies(df['Day of Week']).add_prefix('DoW_')
+dfdow = dfdow.apply(pd.to_numeric) 
+df=pd.concat([df, dfdow], axis=1)
+df = df.drop(['Day of Week'],axis=1 )
+df = df.drop(['DoW_Sunday'],axis=1 )
+
+dfw= pd.get_dummies(df['Week']).add_prefix('Week_')
+dfw = dfw.apply(pd.to_numeric) 
+df=pd.concat([df, dfw], axis=1)
+df = df.drop(['Week'],axis=1 )
+df = df.drop(['Week_52.0'],axis=1 )
+
+dfHoliday= pd.get_dummies(df['Holiday']).add_prefix('Holiday')
+dfHoliday = dfHoliday.apply(pd.to_numeric) 
+df=pd.concat([df, dfHoliday], axis=1)
+df = df.drop(['Holiday'],axis=1 )
+
+
+#scaler = MinMaxScaler()
+
+#num_vars = ['Internet_New_Business_Count', 'Retail_New_Business_Count']
+
+
+df= df.astype('int64')
+df = df.apply(pd.to_numeric) 
+#df = df.drop(['Internet_New_Business_Count'],axis=1 )
+#df = df.drop(['Retail_New_Business_Count'],axis=1 )
+#X[num_vars] = scaler.fit_transform(X[num_vars])
+df=sm.add_constant(df)
+
+
+#################################
+Alteryx.write(pd.DataFrame(df.columns) ,2)
+
+
+#################################
+'''
+import os
+from sklearn.externals import joblib
+cw=os.getcwd()
+os.chdir("//pgac.com/dfs/PGCForum/Contact Center Analytics/Call Offered Model/Model")
+#joblib_file = "\\pgac.com\dfs\PGCForum\Contact Center Analytics\Call Offered Model\Model\Calls Offered.pkl"  
+joblib_file = "Calls Offered.pkl" 
+joblib.dump(lr_1, joblib_file)
+os.chdir(cw)
+print('done')
+#'''
+
+
+#################################
+#'''
+import os
+import joblib
+cw=os.getcwd()
+os.chdir("//pgac.com/dfs/PGCForum/Contact Center Analytics/Call Offered Model/Model")
+joblib_LR_model = joblib.load("Calls Offered.pkl")
+df3 = joblib_LR_model.predict(df)
+df3 = pd.DataFrame(df3, 
+             columns=['predictions'])
+df3=pd.concat([df2, df3], axis=1)
+os.chdir(cw)
+Alteryx.write(df3,1)
+print('done')
+#'''
+
+
+#################################
+'''
+import os
+cw=os.getcwd()
+print(cw)#'''
